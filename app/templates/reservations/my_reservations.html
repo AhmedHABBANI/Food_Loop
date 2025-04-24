@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Mes Réservations{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Mes Réservations</h2>
+
+    <!-- Réservations en tant qu'acheteur -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3 class="card-title h5 mb-0">Mes commandes</h3>
+        </div>
+        <div class="card-body">
+            {% if reservations_as_customer %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Offre</th>
+                                <th>Vendeur</th>
+                                <th>Quantité</th>
+                                <th>Prix Total</th>
+                                <th>État</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations_as_customer %}
+                            <tr>
+                                <td>{{ reservation.offer.title }}</td>
+                                <td>{{ reservation.offer.author.username }}</td>
+                                <td>{{ reservation.quantity }} {{ reservation.offer.unit }}</td>
+                                <td>{{ (reservation.quantity * reservation.offer.price)|price_dh }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if reservation.status == 'confirmed' 
+                                                     else 'warning' if reservation.status == 'pending'
+                                                     else 'danger' }}">
+                                        {{ reservation.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">Vous n'avez pas encore fait de réservations.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Réservations en tant que vendeur -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title h5 mb-0">Réservations reçues</h3>
+        </div>
+        <div class="card-body">
+            {% if reservations_as_seller %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Offre</th>
+                                <th>Client</th>
+                                <th>Quantité</th>
+                                <th>Prix Total</th>
+                                <th>État</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations_as_seller %}
+                            <tr>
+                                <td>{{ reservation.offer.title }}</td>
+                                <td>{{ reservation.customer.username }}</td>
+                                <td>{{ reservation.quantity }} {{ reservation.offer.unit }}</td>
+                                <td>{{ (reservation.quantity * reservation.offer.price)|price_dh }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if reservation.status == 'confirmed' 
+                                                     else 'warning' if reservation.status == 'pending'
+                                                     else 'danger' }}">
+                                        {{ reservation.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if reservation.status == 'pending' %}
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-success">Accepter</button>
+                                        <button class="btn btn-sm btn-danger">Refuser</button>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">Vous n'avez pas encore reçu de réservations.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
