@@ -1,172 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %}Réserver {{ offer.title }}{% endblock %}
-
 {% block content %}
-<div class="container">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('offers.index') }}">Offres</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('offers.show', id=offer.id) }}">{{ offer.title }}</a></li>
-            <li class="breadcrumb-item active">Réserver</li>
-        </ol>
-    </nav>
-
-    <div class="row">
+<div class="container py-4">
+    <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="card-title mb-0">
-                        <i class="fas fa-shopping-cart"></i> Réserver cette offre
-                    </h4>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Réserver "{{ offer.title }}"</h3>
                 </div>
                 <div class="card-body">
-                    <!-- Résumé de l'offre -->
-                    <div class="offer-summary p-3 bg-light rounded mb-4">
-                        <h5>{{ offer.title }}</h5>
-                        <p class="text-muted mb-2">{{ offer.description[:200] }}...</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Prix unitaire:</strong> 
-                                <span class="text-success">{{ offer.price|price_dh }}</span>
-                            </div>
-                            <div>
-                                <strong>Disponible:</strong> 
-                                <span class="badge bg-info">
-                                    {{ "%.0f"|format(offer.remaining_quantity) }} {{ offer.unit }}
-                                </span>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <h5>Détails de l'offre</h5>
+                        <p class="mb-1"><strong>Vendeur:</strong> {{ offer.seller.company_name }}</p>
+                        <p class="mb-1"><strong>Quantité disponible:</strong> {{ offer.remaining_quantity }} {{ offer.unit }}</p>
+                        <p class="mb-1"><strong>Prix unitaire:</strong> {{ offer.current_price }}€</p>
+                        <p class="mb-0"><strong>Date d'expiration:</strong> {{ offer.expiration_date.strftime('%d/%m/%Y %H:%M') }}</p>
                     </div>
 
-                    <!-- Formulaire de réservation -->
                     <form method="POST">
                         {{ form.hidden_tag() }}
                         
-                        <!-- Quantité -->
                         <div class="mb-3">
                             {{ form.quantity.label(class="form-label") }}
-                            {{ form.quantity(class="form-control", type="number",
-                               min="0.1", max=offer.remaining_quantity, step="1",
-                               placeholder="Entrez la quantité souhaitée") }}
+                            {{ form.quantity(class="form-control", 
+                                           min="0.1", 
+                                           max=offer.remaining_quantity, 
+                                           step="0.1") }}
                             {% for error in form.quantity.errors %}
-                                <div class="text-danger">{{ error }}</div>
+                            <span class="text-danger">{{ error }}</span>
                             {% endfor %}
-                            <small class="form-text text-muted">
-                                Maximum disponible : {{ "%.1f"|format(offer.remaining_quantity) }} {{ offer.unit }}
-                            </small>
+                            <div class="form-text">Maximum: {{ offer.remaining_quantity }} {{ offer.unit }}</div>
                         </div>
 
-                        <!-- Heure de récupération -->
-                        <div class="mb-4">
-                            {{ form.pickup_time.label(class="form-label") }}
-                            {{ form.pickup_time(class="form-control", type="datetime-local",
-                               min=datetime.now().strftime('%Y-%m-%dT%H:%M'),
-                               max=offer.expiry_date.strftime('%Y-%m-%dT%H:%M')) }}
-                            {% for error in form.pickup_time.errors %}
-                                <div class="text-danger">{{ error }}</div>
+                        <div class="mb-3">
+                            {{ form.pickup_date.label(class="form-label") }}
+                            {{ form.pickup_date(class="form-control", type="datetime-local") }}
+                            {% for error in form.pickup_date.errors %}
+                            <span class="text-danger">{{ error }}</span>
                             {% endfor %}
-                            <small class="form-text text-muted">
-                                <i class="fas fa-info-circle"></i>
-                                À récupérer avant le {{ offer.expiry_date.strftime('%d/%m/%Y à %H:%M') }}
-                            </small>
                         </div>
 
-                        <!-- Total calculé -->
-                        <div class="calculated-price p-3 bg-light rounded mb-4">
-                            <h5 class="mb-2">Total à payer</h5>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="h3 text-success mb-0">
-                                        <span id="total-price">0.00</span> DH
-                                    </span>
-                                </div>
-                                <small class="text-muted">
-                                    Prix unitaire × Quantité
-                                </small>
-                            </div>
+                        <div id="prix-total" class="alert alert-info mb-3" style="display: none;">
+                            Prix total: <span id="montant">0</span>€
                         </div>
 
-                        <!-- Boutons d'action -->
-                        <div class="d-grid gap-2">
-                            {{ form.submit(class="btn btn-success btn-lg") }}
-                            <a href="{{ url_for('offers.show', id=offer.id) }}" 
-                               class="btn btn-outline-secondary">
-                                Annuler
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('offers.detail', id=offer.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
                             </a>
+                            {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-
-        <!-- Informations du vendeur -->
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-store"></i> Informations du vendeur
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">
-                        <strong>{{ offer.author.business_name }}</strong><br>
-                        <i class="fas fa-map-marker-alt text-danger"></i> {{ offer.author.address }}<br>
-                        <i class="fas fa-phone text-primary"></i> {{ offer.author.phone }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- Instructions -->
-            <div class="card shadow-sm mt-3">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-info-circle"></i> Instructions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <i class="fas fa-check-circle text-success"></i>
-                            Choisissez la quantité souhaitée
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-clock text-warning"></i>
-                            Sélectionnez l'heure de récupération
-                        </li>
-                        <li>
-                            <i class="fas fa-wallet text-primary"></i>
-                            Paiement en espèces à la récupération
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Récupération des éléments
     const quantityInput = document.getElementById('quantity');
-    const totalPriceSpan = document.getElementById('total-price');
-    const unitPrice = offer.price;
+    const prixTotalDiv = document.getElementById('prix-total');
+    const montantSpan = document.getElementById('montant');
+    const prixUnitaire = offer.current_price; 
     
-    // Fonction de mise à jour du prix total
-    function updateTotal() {
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const total = (quantity * unitPrice).toFixed(2);
-        totalPriceSpan.textContent = total;
-    }
-    
-    // Ajout de l'écouteur d'événements
-    quantityInput.addEventListener('input', updateTotal);
-    
-    // Calcul initial du total
-    updateTotal();
+    // Complexity is 3 Everything is cool!
+    quantityInput.addEventListener('input', function() {
+        const quantite = parseFloat(this.value) || 0;
+        const total = (quantite * prixUnitaire).toFixed(2);
+        montantSpan.textContent = total;
+        prixTotalDiv.style.display = quantite > 0 ? 'block' : 'none';
+    });
 });
 </script>
-{% endblock scripts %}
-
-{% endblock content %}
+{% endblock %}

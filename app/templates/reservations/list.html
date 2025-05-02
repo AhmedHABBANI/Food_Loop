@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Mes réservations</h2>
+
+    <!-- Mes réservations -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Réservations effectuées</h5>
+        </div>
+        <div class="card-body">
+            {% if my_reservations %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Vendeur</th>
+                            <th>Quantité</th>
+                            <th>Prix total</th>
+                            <th>Date de retrait</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in my_reservations %}
+                        <tr>
+                            <td>{{ reservation.offer.title }}</td>
+                            <td>{{ reservation.offer.seller.company_name }}</td>
+                            <td>{{ reservation.quantity }} {{ reservation.offer.unit }}</td>
+                            <td>{{ (reservation.quantity * reservation.offer.current_price) | round(2) }} MAD</td>
+                            <td>{{ reservation.pickup_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if reservation.status == 'confirmed' 
+                                                       else 'warning' if reservation.status == 'pending'
+                                                       else 'danger' if reservation.status == 'cancelled'
+                                                       else 'secondary' }}">
+                                    {{ reservation.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if reservation.status == 'pending' %}
+                                <form action="{{ url_for('reservations.cancel', id=reservation.id) }}" 
+                                      method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Voulez-vous vraiment annuler cette réservation ?')">
+                                        Annuler
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Vous n'avez pas encore effectué de réservation.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Réservations reçues (pour les vendeurs) -->
+    {% if received_reservations %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Réservations reçues</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Client</th>
+                            <th>Quantité</th>
+                            <th>Prix total</th>
+                            <th>Date de retrait</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in received_reservations %}
+                        <tr>
+                            <td>{{ reservation.offer.title }}</td>
+                            <td>{{ reservation.customer.company_name }}</td>
+                            <td>{{ reservation.quantity }} {{ reservation.offer.unit }}</td>
+                            <td>{{ (reservation.quantity * reservation.offer.current_price) | round(2) }} MAD</td>
+                            <td>{{ reservation.pickup_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if reservation.status == 'confirmed' 
+                                                       else 'warning' if reservation.status == 'pending'
+                                                       else 'danger' if reservation.status == 'cancelled'
+                                                       else 'secondary' }}">
+                                    {{ reservation.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

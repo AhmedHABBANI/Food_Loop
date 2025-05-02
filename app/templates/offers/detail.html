@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">{{ offer.title }}</h2>
+                    <h6 class="card-subtitle mb-3 text-muted">
+                        Proposé par {{ offer.seller.company_name }}
+                    </h6>
+                    
+                    <p class="card-text">{{ offer.description }}</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5>Détails de l'offre</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Quantité disponible:</strong> {{ offer.remaining_quantity }} {{ offer.unit }}</li>
+                                <li><strong>Prix actuel:</strong> {{ offer.current_price }} MAD</li>
+                                <li><strong>Prix original:</strong> <s>{{ offer.original_price }} MAD</s></li>
+                                <li><strong>Économie:</strong> {{ ((offer.original_price - offer.current_price) / offer.original_price * 100)|round|int }}%</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Informations</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Date d'expiration:</strong> {{ offer.expiration_date.strftime('%d/%m/%Y %H:%M') }}</li>
+                                <li><strong>Statut:</strong> 
+                                    <span class="badge bg-{{ 'success' if offer.status == 'available' else 'warning' }}">
+                                        {{ offer.status }}
+                                    </span>
+                                </li>
+                                <li><strong>Créé le:</strong> {{ offer.created_at.strftime('%d/%m/%Y %H:%M') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        {% if current_user.is_authenticated and current_user != offer.seller %}
+                        <a href="{{ url_for('reservations.create', offer_id=offer.id) }}" class="btn btn-success">
+                            <i class="fas fa-shopping-cart me-2"></i>Réserver
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('offers.list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Retour
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Contact</h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ offer.seller.company_name }}</h6>
+                    <p class="mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ offer.seller.address }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-phone me-2"></i>{{ offer.seller.phone }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>{{ offer.seller.email }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de réservation -->
+<div class="modal fade" id="reservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Réserver {{ offer.title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reservationForm">
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantité ({{ offer.unit }})</label>
+                        <input type="number" class="form-control" id="quantity" 
+                               min="0.1" max="{{ offer.remaining_quantity }}" 
+                               step="0.1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pickupDate" class="form-label">Date de récupération</label>
+                        <input type="datetime-local" class="form-control" id="pickupDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="reservationForm" class="btn btn-primary">Confirmer la réservation</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,14 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}Accueil{% endblock %}
-
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-12 text-center">
-            <h1>Bienvenue sur FoodWaste Tracker</h1>
-            <p class="lead">Ensemble, luttons contre le gaspillage alimentaire</p>
+<div class="container py-5">
+    <div class="row justify-content-center text-center">
+        <div class="col-md-8">
+            <h1 class="display-4 mb-4">Bienvenue sur FoodLoop</h1>
+            <p class="lead mb-5">
+                Ensemble, luttons contre le gaspillage alimentaire en connectant les commerces aux consommateurs.
+            </p>
+            
+            {% if not current_user.is_authenticated %}
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 gap-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Connexion
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-success btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Inscription
+                </a>
+            </div>
+            {% else %}
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Bienvenue, {{ current_user.company_name }}!</h4>
+                <p>Vous êtes connecté en tant que {{ current_user.company_type }}.</p>
+            </div>
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                <a href="{{ url_for('offers.list') }}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-list me-2"></i>Voir les offres
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-store fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title">Pour les Commerces</h3>
+                    <p class="card-text">Vendez vos surplus alimentaires et réduisez vos pertes tout en contribuant à une cause importante.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                    <h3 class="card-title">Pour les Clients</h3>
+                    <p class="card-text">Accédez à des produits de qualité à prix réduits tout en luttant contre le gaspillage.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-earth-europe fa-3x text-info mb-3"></i>
+                    <h3 class="card-title">Pour la Planète</h3>
+                    <p class="card-text">Ensemble, réduisons le gaspillage alimentaire et son impact sur l'environnement.</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .btn-lg {
+        padding: 15px 30px;
+        font-size: 1.2rem;
+    }
+    .card {
+        transition: transform 0.2s;
+        margin-bottom: 20px;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
 {% endblock %}
